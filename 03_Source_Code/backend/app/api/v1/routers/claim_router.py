@@ -156,6 +156,9 @@ async def get_claim_detail(
 	db: AsyncSession = Depends(get_db),
 	current_user: UserEntity = Depends(get_current_user)
 ):
+	if current_user.role != Role.ADMIN:
+		raise HTTPException(status_code=403, detail="Hanya admin yang dapat melihat detail claim")
+
 	repo = ClaimRepository(db)
 	service = ClaimService(repo)
 	claim = await service.get_by_id(claim_id)
