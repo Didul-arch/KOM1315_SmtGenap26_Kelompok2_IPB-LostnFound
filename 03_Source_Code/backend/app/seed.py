@@ -6,8 +6,7 @@ from database.models.user_model import UserModel
 from database.models.item_model import ItemModel
 from database.models.claim_model import ClaimModel
 
-from database.models.activity_history_model import ActivityHistoryModel
-from database.models.activity_history_model import ActivityHistoryKind
+// Activity history import removed as activity logs are not seeded
 from backend.app.domains.item.entity import ItemStatus, ReportType
 from backend.app.domains.user.entity import Role
 from backend.app.domains.claim.entity import RequestType, ClaimStatus
@@ -113,46 +112,7 @@ async def seed_data():
             session.add(claim1)
             await session.flush() # Flush agar id claim ter-generate
 
-            # ==========================================
-            # 4. SEED ACTIVITY HISTORY
-            # ==========================================
-            # History 1: Pencatatan awal saat item1 dilaporkan
-            history1 = ActivityHistoryModel(
-                user_id=item1.reporter_id,
-                item_id=item1.id,
-                claim_id=None,
-                history_type=ActivityHistoryKind.REPORT,
-                request_type=None,
-                item_status=item1.status.value,
-                request_status=None,
-                report_type=item1.report_type.value,
-                title=item1.title,
-                description=item1.description,
-                location=item1.location,
-                category=item1.category,
-                image=item1.image,
-                created_at=item1.created_at,
-            )
-
-            # History 2: Pencatatan saat Budi (user3) mengajukan klaim atas item1
-            history2 = ActivityHistoryModel(
-                user_id=claim1.claimer_id,
-                item_id=item1.id,
-                claim_id=claim1.id,
-                history_type=ActivityHistoryKind.REQUEST,
-                request_type=claim1.request_type,
-                item_status=item1.status.value,
-                request_status=claim1.status.value,
-                report_type=item1.report_type.value,
-                title=item1.title,
-                description=item1.description,
-                location=item1.location,
-                category=item1.category,
-                image=item1.image,
-                created_at=claim1.created_at,
-            )
-            
-            session.add_all([history1, history2])
+            # Activity history seeding omitted per requirement
             
         print("[SUCCESS] Seeding selesai! Database sudah di-reset dan diisi ulang dari nol.")
 

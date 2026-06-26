@@ -190,6 +190,16 @@ async def get_user_detail_admin(
 
 from backend.app.infrastructure.repositories.audit_log_repository import AuditLogRepository
 
+@router.get("/admin/audit-logs/stats")
+async def get_audit_log_stats(
+    db: AsyncSession = Depends(get_db),
+    current_user: UserEntity = Depends(get_current_user),
+):
+    require_admin(current_user)
+    repo = AuditLogRepository(db)
+    return await repo.get_stats()
+
+
 @router.get("/admin/audit-logs")
 async def get_audit_logs(
     page: int = 1,

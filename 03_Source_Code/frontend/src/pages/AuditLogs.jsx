@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiJson } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { ShieldAlert, Globe, Server, User, Calendar, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldAlert, Globe, Server, User, Calendar, Loader2, ChevronLeft, ChevronRight, LogIn, LogOut, Activity, FileText, Package, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 /* ───── Spinner component ───── */
@@ -15,11 +15,54 @@ const Spinner = ({ size = 16, color = 'currentColor' }) => (
   </motion.div>
 );
 
+/* ───── KPI Card component ───── */
+const KpiCard = ({ icon: Icon, label, value, gradient, delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay, duration: 0.4 }}
+    style={{
+      background: 'white',
+      borderRadius: '16px',
+      padding: '24px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '16px',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+      border: '1px solid #f1f5f9',
+      transition: 'transform 0.2s, box-shadow 0.2s',
+      cursor: 'default',
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = 'translateY(-2px)';
+      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = 'translateY(0)';
+      e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.06)';
+    }}
+  >
+    <div style={{
+      width: 48, height: 48, borderRadius: 14,
+      background: gradient,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: 'white', flexShrink: 0,
+    }}>
+      <Icon size={22} />
+    </div>
+    <div>
+      <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{label}</div>
+      <div style={{ fontSize: '28px', fontWeight: '700', color: '#0f172a', lineHeight: 1 }}>{value}</div>
+    </div>
+  </motion.div>
+);
+
 const AuditLogs = () => {
   const { token } = useAuth();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const [stats, setStats] = useState(null);
+
   // Pagination state
   const [page, setPage] = useState(1);
   const [limit] = useState(15);
@@ -28,9 +71,21 @@ const AuditLogs = () => {
 
   useEffect(() => {
     if (token) {
+      fetchStats();
       fetchLogs(page);
     }
   }, [token, page]);
+
+  const fetchStats = async () => {
+    try {
+      const result = await apiJson('/admin/audit-logs/stats', { token });
+      if (result.ok && result.data) {
+        setStats(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch audit stats:', error);
+    }
+  };
 
   const fetchLogs = async (currentPage) => {
     setLoading(true);
@@ -65,12 +120,21 @@ const AuditLogs = () => {
     return { bg: '#f3f4f6', text: '#374151' };
   };
 
+  const kpiCards = [
+    { icon: Activity, label: 'Total Requests', value: stats?.total_requests ?? '–', gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },
+    { icon: LogIn, label: 'Logins', value: stats?.login_count ?? '–', gradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' },
+    { icon: LogOut, label: 'Logouts', value: stats?.logout_count ?? '–', gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
+    { icon: FileText, label: 'Claims', value: stats?.claims_count ?? '–', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
+    { icon: Package, label: 'Items', value: stats?.items_count ?? '–', gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' },
+    { icon: Users, label: 'Unique Users', value: stats?.unique_users ?? '–', gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' },
+  ];
+
   return (
     <div style={{ padding: '40px', background: '#f8f9fa', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         
         {/* Header */}
-        <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{
             width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white',
@@ -82,6 +146,18 @@ const AuditLogs = () => {
             <h1 style={{ fontSize: '28px', fontWeight: '700', margin: '0 0 4px', color: '#111827' }}>System Audit Logs</h1>
             <p style={{ color: '#6b7280', margin: 0, fontSize: '15px' }}>Monitor system activities, endpoint access, and security events</p>
           </div>
+        </div>
+
+        {/* KPI Cards Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          gap: '16px',
+          marginBottom: '28px',
+        }}>
+          {kpiCards.map((card, i) => (
+            <KpiCard key={card.label} {...card} delay={i * 0.06} />
+          ))}
         </div>
 
         {/* Table Container */}
@@ -112,7 +188,7 @@ const AuditLogs = () => {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.02 }}
-                      style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s', ':hover': { background: '#f8fafc' } }}
+                      style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }}
                     >
                       <td style={{ padding: '16px 24px', verticalAlign: 'top' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#334155', fontSize: '14px', fontWeight: '500' }}>
