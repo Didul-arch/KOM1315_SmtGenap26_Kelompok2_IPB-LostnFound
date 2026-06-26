@@ -23,4 +23,4 @@ COPY ./digital_signature ./digital_signature
 COPY ./backend/alembic.ini ./backend/alembic.ini
 
 # 5. Command to run the app using Uvicorn (from project root)
-CMD alembic -c backend/alembic.ini upgrade head && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+CMD cd backend && alembic upgrade head && cd .. && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000

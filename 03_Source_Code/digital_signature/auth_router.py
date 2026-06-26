@@ -123,9 +123,13 @@ async def refresh_access_token(payload: RefreshTokenRequest, db: AsyncSession = 
 async def get_current_user(request: Request, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
 	try:
 		payload = auth_utils.decode_token(token)
+		if payload.get("type") != "access":
+			raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
 		username = payload.get("sub")
 		if username is None:
 			raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+	except HTTPException:
+		raise
 	except Exception:
 		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
 	repo = UserRepository(db)
